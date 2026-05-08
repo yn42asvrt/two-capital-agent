@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TW.O Capital — BD Intelligence Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f8fafc;
+    --bg2: #ffffff;
+    --bg3: #f0f7ff;
+    --border: #dce8f5;
+    --border2: #b8d4ed;
+    --green: #29abe2;
+    --green-bright: #29abe2;
+    --green-dim: #e8f6fd;
+    --amber: #1a7aad;
+    --amber-bright: #1a7aad;
+    --red: #e05c5c;
+    --red-bright: #e05c5c;
+    --blue: #a8a8b0;
+    --blue-bright: #a8a8b0;
+    --text: #1a2332;
+    --text2: #4a6080;
+    --text3: #8a9ab0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(41,171,226,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(41,171,226,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* HEADER */
+  .header { padding: 32px 0 24px; border-bottom: 2px solid #29abe2; margin-bottom: 28px; }
+  .header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(22,163,74,0.6); animation: pulse 2s infinite; flex-shrink: 0; border: 2px solid #1a7aad; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(41,171,226,0.5)} 50%{box-shadow:0 0 0 8px rgba(41,171,226,0)} }
+  .badge { font-size: 10px; letter-spacing: 0.2em; color: #1a7aad; font-weight: 600; }
+  .title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #0d2a42; letter-spacing: -0.02em; }
+  .subtitle { font-size: 11px; color: var(--text3); letter-spacing: 0.08em; margin-top: 4px; }
+
+  /* API KEY */
+  .apikey-section {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 14px 18px; margin-bottom: 20px;
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .apikey-label { font-size: 10px; color: var(--text3); letter-spacing: 0.12em; white-space: nowrap; }
+  .apikey-input {
+    flex: 1; min-width: 200px; padding: 8px 12px; background: var(--bg3);
+    border: 1px solid var(--border2); color: var(--text); font-family: inherit;
+    font-size: 11px; border-radius: 3px; letter-spacing: 0.05em;
+  }
+  .apikey-input:focus { outline: 1px solid var(--green); }
+  .apikey-status { font-size: 10px; white-space: nowrap; }
+  .apikey-ok { color: #29abe2; font-weight: 600; }
+  .apikey-empty { color: var(--text3); }
+
+  /* SCORECARD */
+  .config-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
+  .config-header { padding: 12px 18px; background: var(--bg3); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+  .config-header:hover { background: #e8f4fc; }
+  .config-header-label { font-size: 10px; color: #1a7aad; letter-spacing: 0.15em; font-weight: 600; }
+  .config-body { padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .criterion { display: flex; align-items: center; gap: 10px; }
+  .criterion-name { font-size: 10px; color: var(--text2); letter-spacing: 0.06em; min-width: 130px; }
+  .weight-input { width: 52px; padding: 4px 8px; background: var(--bg3); border: 1px solid var(--border2); color: #1a7aad; font-family: inherit; font-size: 11px; border-radius: 3px; text-align: center; }
+  .weight-input:focus { outline: 1px solid var(--green); }
+  .weight-bar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .weight-fill { height: 100%; background: #29abe2; border-radius: 2px; transition: width 0.3s; }
+  .total-weight { font-size: 10px; color: var(--text3); padding: 6px 18px 10px; text-align: right; }
+  .total-ok { color: var(--green-bright); }
+  .total-err { color: var(--red-bright); }
+
+  /* SEARCH */
+  .search-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 18px; margin-bottom: 20px; }
+  .search-label { font-size: 10px; color: var(--text3); letter-spacing: 0.12em; margin-bottom: 10px; }
+  .search-row { display: flex; gap: 10px; }
+  .search-input { flex: 1; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border2); color: var(--text); font-family: inherit; font-size: 12px; border-radius: 4px; transition: border-color 0.15s; }
+  .search-input:focus { outline: none; border-color: var(--green); }
+  .search-input::placeholder { color: var(--text3); }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .preset-btn { font-size: 10px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border2); color: var(--text3); background: transparent; cursor: pointer; font-family: inherit; letter-spacing: 0.05em; transition: all 0.15s; }
+  .preset-btn:hover { border-color: var(--green); color: var(--green-bright); background: var(--green-dim); }
+
+  .run-btn { padding: 10px 24px; background: #29abe2; border: none; border-radius: 4px; color: #fff; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .run-btn:hover:not(:disabled) { background: #1a8fc0; transform: translateY(-1px); }
+  .run-btn:disabled { background: var(--border2); color: var(--text3); cursor: not-allowed; }
+  .run-btn.running { background: #1a7aad; }
+
+  /* STATUS */
+  .status-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 16px; min-height: 38px; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; transition: background 0.3s; }
+  .status-dot.idle { background: #a8a8b0; }
+  .status-dot.running { background: #29abe2; animation: pulse 1s infinite; }
+  .status-dot.done { background: #29abe2; }
+  .status-dot.error { background: #e05c5c; }
+  .status-text { font-size: 11px; color: var(--text2); flex: 1; }
+  .status-count { font-size: 10px; color: var(--text3); }
+
+  /* LOG */
+  .thinking-log { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; margin-bottom: 16px; max-height: 140px; overflow-y: auto; font-size: 10px; line-height: 1.9; }
+  .thinking-log:empty { display: none; }
+  .log-line { display: flex; gap: 8px; }
+  .log-ts { color: var(--green-dim); opacity: 0.7; flex-shrink: 0; filter: brightness(2); }
+  .log-msg { color: var(--text3); }
+  .log-line.hl .log-msg { color: var(--green-bright); }
+
+  /* RESULTS */
+  .results-header { display: flex; justify-content: space-between; align-items: center; padding: 0 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .results-label { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #0d2a42; }
+  .results-meta { font-size: 10px; color: var(--text3); letter-spacing: 0.08em; }
+
+  /* LEAD CARD */
+  .lead-card { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid transparent; border-radius: 4px; padding: 14px 16px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; animation: slideIn 0.4s ease forwards; opacity: 0; transform: translateY(10px); }
+  .lead-card.score-high { border-left-color: #29abe2; }
+  .lead-card.score-med  { border-left-color: #1a7aad; }
+  .lead-card.score-low  { border-left-color: #a8a8b0; }
+  @keyframes slideIn { to { opacity:1; transform:translateY(0); } }
+  .lead-card:hover { background: #f0f7ff; border-color: #b8d4ed; box-shadow: 0 2px 12px rgba(41,171,226,0.1); }
+  .lead-top { display: grid; grid-template-columns: 48px 1fr auto; gap: 14px; align-items: center; }
+  .lead-score { text-align: center; }
+  .score-num { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; line-height: 1; }
+  .score-lbl { font-size: 8px; color: #8a9ab0; letter-spacing: 0.1em; margin-top: 2px; }
+  .lead-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #0d2a42; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .lead-meta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .meta-item { font-size: 11px; color: var(--text2); }
+  .urgency-badge { font-size: 9px; padding: 2px 8px; border-radius: 2px; border: 1px solid; letter-spacing: 0.06em; font-weight: 500; white-space: nowrap; }
+
+  /* EXPANDED */
+  .lead-detail { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .lead-card.expanded .lead-detail { display: block; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .detail-cell { background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: 8px 10px; }
+  .detail-cell-label { font-size: 8px; color: var(--text3); letter-spacing: 0.12em; margin-bottom: 3px; }
+  .detail-cell-val { font-size: 11px; color: #1a2332; line-height: 1.4; }
+  .pitch-box { background: #eaf6fd; border: 1px solid rgba(41,171,226,0.3); border-radius: 3px; padding: 12px; margin-bottom: 8px; }
+  .pitch-label { font-size: 9px; color: #1a7aad; letter-spacing: 0.12em; margin-bottom: 5px; font-weight: 600; }
+  .pitch-text { font-size: 11px; color: #1a3a52; line-height: 1.7; }
+  .contact-row { font-size: 11px; color: #1a7aad; font-weight: 500; }
+  .score-bars { margin-bottom: 12px; }
+  .score-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .score-bar-name { font-size: 9px; color: var(--text3); width: 120px; letter-spacing: 0.05em; flex-shrink: 0; }
+  .score-bar-track { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 2px; transition: width 0.8s ease; }
+  .score-bar-val { font-size: 9px; color: var(--text2); width: 28px; text-align: right; flex-shrink: 0; }
+
+  .empty { text-align: center; padding: 60px 0; color: var(--text3); font-size: 12px; letter-spacing: 0.08em; line-height: 2; }
+  .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .title { font-size: 20px; }
+    .config-body { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .lead-top { grid-template-columns: 40px 1fr; }
+    .lead-top > :last-child { display: none; }
+    .search-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="pulse"></div>
+      <span class="badge">TW.O POINT O CAPITAL · LIVE BD INTELLIGENCE AGENT</span>
+    </div>
+    <div class="title">Morning Lead Intelligence</div>
+    <div class="subtitle">POWERED BY CLAUDE + REAL-TIME WEB SEARCH · SCORED AGAINST YOUR CRITERIA</div>
+  </div>
+
+  <!-- API KEY -->
+  <div class="apikey-section">
+    <span class="apikey-label">ANTHROPIC API KEY</span>
+    <input class="apikey-input" id="apikey-input" type="password"
+      placeholder="sk-ant-api03-..." oninput="checkKey()"/>
+    <span class="apikey-status" id="apikey-status">
+      <span class="apikey-empty">⬤ NOT SET</span>
+    </span>
+  </div>
+
+  <!-- SCORECARD -->
+  <div class="config-section">
+    <div class="config-header" onclick="toggleConfig()">
+      <span class="config-header-label">⚙ SCORING CRITERIA — CONFIGURE WEIGHTS (MUST SUM TO 100)</span>
+      <span style="font-size:10px;color:var(--text3)" id="config-toggle">▾ EXPAND</span>
+    </div>
+    <div class="config-body" id="config-body" style="display:none">
+      <div class="criterion">
+        <span class="criterion-name">1. CREDIT (BBB+)</span>
+        <input class="weight-input" id="w1" type="number" value="28" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf1" style="width:28%"></div></div>
+      </div>
+      <div class="criterion">
+        <span class="criterion-name">2. REVENUE (₹100 Cr+)</span>
+        <input class="weight-input" id="w2" type="number" value="18" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf2" style="width:18%"></div></div>
+      </div>
+      <div class="criterion">
+        <span class="criterion-name">3. PROJECT SIZE (500 kWp+)</span>
+        <input class="weight-input" id="w3" type="number" value="16" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf3" style="width:16%"></div></div>
+      </div>
+      <div class="criterion">
+        <span class="criterion-name">4. COMMISSIONING TIMING</span>
+        <input class="weight-input" id="w4" type="number" value="18" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf4" style="width:18%"></div></div>
+      </div>
+      <div class="criterion">
+        <span class="criterion-name">5. MULTI-ASSET CROSS-SELL</span>
+        <input class="weight-input" id="w5" type="number" value="6" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf5" style="width:6%"></div></div>
+      </div>
+      <div class="criterion">
+        <span class="criterion-name">6. GLOBAL MNC / ESG TARGET</span>
+        <input class="weight-input" id="w6" type="number" value="4" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf6" style="width:4%"></div></div>
+      </div>
+      <div class="criterion">
+        <span class="criterion-name">7. SUSTAINABILITY CHAMPION</span>
+        <input class="weight-input" id="w7" type="number" value="4" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf7" style="width:4%"></div></div>
+      </div>
+      <div class="criterion">
+        <span class="criterion-name">8. PE-BACKED (GIC/KKR etc.)</span>
+        <input class="weight-input" id="w8" type="number" value="2" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf8" style="width:2%"></div></div>
+      </div>
+      <div class="criterion">
+        <span class="criterion-name">9. FOUNDER NETWORK FIT</span>
+        <input class="weight-input" id="w9" type="number" value="2" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf9" style="width:2%"></div></div>
+      </div>
+      <div class="criterion">
+        <span class="criterion-name">10. FIRST ENERGY DEAL</span>
+        <input class="weight-input" id="w10" type="number" value="2" min="0" max="100" oninput="updateWeights()"/>
+        <div class="weight-bar"><div class="weight-fill" id="wf10" style="width:2%"></div></div>
+      </div>
+    </div>
+    <div class="total-weight" id="total-weight">TOTAL: <span class="total-ok">100 / 100 ✓</span></div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-panel">
+    <div class="search-label">SEARCH QUERY — AGENT CRAWLS THE WEB AND SCORES RESULTS AGAINST YOUR CRITERIA IN REAL TIME</div>
+    <div class="search-row">
+      <input class="search-input" id="query-input"
+        placeholder="e.g. European MNC new manufacturing plant India commissioning 2026..."
+        value="new manufacturing plant India commissioned 2026 EPC contract L&T Tata Projects industrial greenfield"/>
+      <button class="run-btn" id="run-btn" onclick="runAgent()">
+        <span id="btn-icon">▶</span>
+        <span id="btn-text">RUN AGENT</span>
+      </button>
+    </div>
+    <div class="presets">
+      <button class="preset-btn" onclick="setQuery('new manufacturing plant India commissioned 2026 EPC contract L&T Tata Projects Shapoorji industrial')">EPC-Sourced Leads</button>
+      <button class="preset-btn" onclick="setQuery('MIDC GIDC KIADB SIPCOT new plant allotment 2025 2026 manufacturing commissioned')">State Industrial Parks</button>
+      <button class="preset-btn" onclick="setQuery('European MNC India greenfield factory sustainability Scope 2 target commissioning 2026')">European MNC</button>
+      <button class="preset-btn" onclick="setQuery('GIC KKR Warburg Blackstone ChrysCapital portfolio company India new manufacturing plant 2026')">PE-Backed Plants</button>
+      <button class="preset-btn" onclick="setQuery('pharma chemicals auto ancillary food processing new plant India 2026 CRISIL ICRA rated NSE BSE listed')">Mid-Cap Listed</button>
+      <button class="preset-btn" onclick="setQuery('environmental clearance India manufacturing 2025 2026 new plant greenfield BBB investment grade listed')">EC Approvals</button>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-bar" id="status-bar">
+    <div class="status-dot idle" id="status-dot"></div>
+    <div class="status-text" id="status-text">Enter your API key, configure weights, and press RUN AGENT.</div>
+    <div class="status-count" id="status-count"></div>
+  </div>
+
+  <div class="thinking-log" id="thinking-log"></div>
+
+  <!-- RESULTS -->
+  <div id="results-section" style="display:none">
+    <div class="results-header">
+      <div class="results-label">TODAY'S SHORTLIST</div>
+      <div class="results-meta" id="results-meta"></div>
+    </div>
+    <div id="results-list"></div>
+  </div>
+
+  <div class="empty" id="empty-state">
+    Enter your Anthropic API key above.<br/>
+    Configure your scoring weights.<br/>
+    Press RUN AGENT.
+  </div>
+
+</div>
+
+<script>
+const CRITERIA = [
+  { id: 'credit',          label: 'Credit (BBB+)',             wid: 'w1',  max: 28 },
+  { id: 'revenue',         label: 'Revenue (₹100 Cr+)',        wid: 'w2',  max: 18 },
+  { id: 'project_size',    label: 'Project Size (500 kWp+)',   wid: 'w3',  max: 16 },
+  { id: 'timing',          label: 'Commissioning Timing',      wid: 'w4',  max: 18 },
+  { id: 'cross_sell',      label: 'Multi-Asset Cross-Sell',    wid: 'w5',  max:  6 },
+  { id: 'esg_mandate',     label: 'Global MNC / ESG Target',   wid: 'w6',  max:  4 },
+  { id: 'sustainability',  label: 'Sustainability Champion',   wid: 'w7',  max:  4 },
+  { id: 'pe_backed',       label: 'PE-Backed',                 wid: 'w8',  max:  2 },
+  { id: 'network',         label: 'Founder Network Fit',       wid: 'w9',  max:  2 },
+  { id: 'first_deal',      label: 'First Energy Deal',         wid: 'w10', max:  2 },
+];
+
+let isRunning = false;
+let configOpen = false;
+
+function toggleConfig() {
+  configOpen = !configOpen;
+  document.getElementById('config-body').style.display = configOpen ? 'grid' : 'none';
+  document.getElementById('config-toggle').textContent = configOpen ? '▴ COLLAPSE' : '▾ EXPAND';
+}
+
+function checkKey() {
+  const key = document.getElementById('apikey-input').value.trim();
+  const el = document.getElementById('apikey-status');
+  if (key.startsWith('sk-ant-')) {
+    el.innerHTML = '<span class="apikey-ok">⬤ READY</span>';
+  } else if (key.length > 0) {
+    el.innerHTML = '<span style="color:var(--amber-bright)">⬤ CHECK FORMAT</span>';
+  } else {
+    el.innerHTML = '<span class="apikey-empty">⬤ NOT SET</span>';
+  }
+}
+
+function updateWeights() {
+  let total = 0;
+  for (let i = 1; i <= 10; i++) {
+    const val = Math.max(0, parseInt(document.getElementById('w'+i).value) || 0);
+    total += val;
+    document.getElementById('wf'+i).style.width = Math.min(val, 100) + '%';
+  }
+  const el = document.getElementById('total-weight');
+  if (total === 100) {
+    el.innerHTML = `TOTAL: <span class="total-ok">${total} / 100 ✓</span>`;
+  } else {
+    el.innerHTML = `TOTAL: <span class="total-err">${total} / 100 — must equal 100</span>`;
+  }
+}
+
+function setQuery(q) {
+  document.getElementById('query-input').value = q;
+}
+
+function getWeights() {
+  return {
+    credit:         parseInt(document.getElementById('w1').value)  || 28,
+    revenue:        parseInt(document.getElementById('w2').value)  || 18,
+    project_size:   parseInt(document.getElementById('w3').value)  || 16,
+    timing:         parseInt(document.getElementById('w4').value)  || 18,
+    cross_sell:     parseInt(document.getElementById('w5').value)  ||  6,
+    esg_mandate:    parseInt(document.getElementById('w6').value)  ||  4,
+    sustainability: parseInt(document.getElementById('w7').value)  ||  4,
+    pe_backed:      parseInt(document.getElementById('w8').value)  ||  2,
+    network:        parseInt(document.getElementById('w9').value)  ||  2,
+    first_deal:     parseInt(document.getElementById('w10').value) ||  2,
+  };
+}
+
+function setStatus(type, text, count) {
+  document.getElementById('status-dot').className = 'status-dot ' + type;
+  document.getElementById('status-text').textContent = text;
+  document.getElementById('status-count').textContent = count || '';
+}
+
+function addLog(msg, hl) {
+  const log = document.getElementById('thinking-log');
+  const ts = new Date().toTimeString().slice(0,8);
+  const div = document.createElement('div');
+  div.className = 'log-line' + (hl ? ' hl' : '');
+  div.innerHTML = `<span class="log-ts">[${ts}]</span><span class="log-msg">${msg}</span>`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function scoreColor(s) {
+  if (s >= 80) return '#29abe2';
+  if (s >= 60) return '#1a7aad';
+  return '#a8a8b0';
+}
+
+function scoreClass(s) {
+  if (s >= 80) return 'score-high';
+  if (s >= 60) return 'score-med';
+  return 'score-low';
+}
+
+function urgencyStyle(u) {
+  if (!u) return { bg:'#111', border:'var(--border)', color:'var(--text3)' };
+  const ul = u.toLowerCase();
+  if (ul.includes('close now')) return { bg:'#e8f6fd', border:'#29abe2', color:'#1a7aad' };
+  if (ul.includes('initiate'))  return { bg:'#eef4fa', border:'#1a7aad', color:'#0d5480' };
+  return { bg:'#f4f5f7', border:'#a8a8b0', color:'#4a6080' };
+}
+
+function renderLead(lead, index) {
+  const scores = lead.scores || {};
+  const total = lead.total_score || 0;
+  const col = scoreColor(total);
+  const us = urgencyStyle(lead.urgency);
+
+  const barRows = CRITERIA.map(c => {
+    const wVal = parseInt(document.getElementById(c.wid).value) || c.max;
+    const raw = scores[c.id] || 0;
+    const pct = wVal > 0 ? Math.round((raw / wVal) * 100) : 0;
+    const barCol = pct >= 70 ? '#29abe2' : pct >= 40 ? '#1a7aad' : '#e05c5c';
+    return `<div class="score-bar-row">
+      <span class="score-bar-name">${c.label.toUpperCase()}</span>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${barCol}"></div></div>
+      <span class="score-bar-val">${raw}/${wVal}</span>
+    </div>`;
+  }).join('');
+
+  const srcHost = (() => {
+    try { return new URL(lead.source_url).hostname; } catch { return lead.source_url || '—'; }
+  })();
+
+  const cells = [
+    { l:'LOCATION',       v: lead.location || '—' },
+    { l:'EST. SOLAR SIZE',v: lead.est_mwp || '—' },
+    { l:'SITE STATUS',    v: lead.site_status || '—' },
+    { l:'CREDIT PROFILE', v: lead.credit || '—' },
+    { l:'REVENUE (EST.)', v: lead.revenue_est || '—' },
+    { l:'SECTOR',         v: lead.sector || '—' },
+    { l:'SOURCE',         v: lead.source_url
+        ? `<a href="${lead.source_url}" target="_blank" rel="noopener" style="color:#29abe2;text-decoration:none">${srcHost}</a>`
+        : '—' },
+  ].map(c => `<div class="detail-cell">
+    <div class="detail-cell-label">${c.l}</div>
+    <div class="detail-cell-val">${c.v}</div>
+  </div>`).join('');
+
+  // Solar status badge
+  const solarStatus = lead.solar_status || 'UNVERIFIED';
+  const solarStyle = {
+    'CLEAN SLATE':    { bg:'#e8f6fd', border:'#29abe2', color:'#1a7aad', icon:'✅' },
+    'HAS SOLAR':      { bg:'#fff0f0', border:'#e05c5c', color:'#c0392b', icon:'🔴' },
+    'PARTIAL SOLAR':  { bg:'#fff8e8', border:'#f0a500', color:'#b07800', icon:'⚠️' },
+    'UNVERIFIED':     { bg:'#f4f5f7', border:'#a8a8b0', color:'#4a6080', icon:'⏳' },
+  }[solarStatus] || { bg:'#f4f5f7', border:'#a8a8b0', color:'#4a6080', icon:'?' };
+
+  const ddSources = lead.dd_sources || [];
+  const ddSourcesHtml = ddSources.length ? `
+    <div style="margin-top:10px">
+      <div style="font-size:9px;color:#8a9ab0;letter-spacing:0.1em;margin-bottom:6px">DUE DILIGENCE SOURCES CHECKED</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        ${ddSources.map(s => `<span style="font-size:9px;padding:2px 8px;background:#f0f7ff;border:1px solid #b8d4ed;color:#1a7aad;border-radius:2px">${s}</span>`).join('')}
+      </div>
+    </div>` : '';
+
+  const solarDetail = lead.solar_detail || '';
+
+  // ── CONTACTS & OUTREACH ──────────────────────────────────────────
+  const contacts = lead.contacts || [];
+  const outreachEmail = lead.outreach_email || null;
+  const outreachLinkedIn = lead.outreach_linkedin || '';
+
+  const contactsHtml = contacts.length ? `
+    <div style="background:#f8fafc;border:1px solid #dce8f5;border-radius:3px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-size:9px;color:#1a7aad;letter-spacing:0.12em;margin-bottom:8px;font-weight:600">👤 STAKEHOLDERS TO CONTACT</div>
+      ${contacts.map(c => `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid #dce8f5;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:#0d2a42">${c.name}</div>
+            <div style="font-size:11px;color:#4a6080;margin-top:1px">${c.role}</div>
+            ${c.email_hint ? `<div style="font-size:10px;color:#8a9ab0;margin-top:2px">📧 ${c.email_hint}</div>` : ''}
+            ${c.linkedin_url ? `<div style="font-size:10px;margin-top:2px"><a href="${c.linkedin_url}" target="_blank" rel="noopener" style="color:#29abe2;text-decoration:none">🔗 LinkedIn profile</a></div>` : ''}
+          </div>
+          <span style="font-size:9px;padding:2px 7px;border-radius:2px;border:1px solid;flex-shrink:0;margin-top:2px;
+            ${c.confidence==='CONFIRMED' ? 'background:#e8f6fd;border-color:#29abe2;color:#1a7aad' :
+              c.confidence==='INFERRED' ? 'background:#fff8e8;border-color:#f0a500;color:#b07800' :
+              'background:#f4f5f7;border-color:#a8a8b0;color:#4a6080'}">${c.confidence}</span>
+        </div>`).join('')}
+    </div>` : contacts.length === 0 && lead.outreach_email ? '' : `
+    <div style="background:#f4f5f7;border:1px solid #dce8f5;border-radius:3px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:#8a9ab0">
+      ⏳ Identifying stakeholders...
+    </div>`;
+
+  // Email draft
+  const emailHtml = outreachEmail ? `
+    <div style="background:#f8fafc;border:1px solid #dce8f5;border-radius:3px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:9px;color:#1a7aad;letter-spacing:0.12em;font-weight:600">📧 DRAFT EMAIL</div>
+        <button onclick="copyText(event, 'email-${lead.company.replace(/\s/g,'')}')"
+          style="font-size:9px;padding:2px 10px;background:#e8f6fd;border:1px solid #29abe2;color:#1a7aad;border-radius:2px;cursor:pointer;font-family:inherit">
+          COPY
+        </button>
+      </div>
+      <div style="font-size:10px;color:#8a9ab0;margin-bottom:2px">TO: ${outreachEmail.to || lead.contacts?.[0]?.name || '—'}</div>
+      <div style="font-size:10px;color:#8a9ab0;margin-bottom:8px">SUBJECT: ${outreachEmail.subject || '—'}</div>
+      <div id="email-${lead.company.replace(/\s/g,'')}"
+        style="font-size:11px;color:#1a2332;line-height:1.8;white-space:pre-wrap;background:#fff;border:1px solid #dce8f5;border-radius:2px;padding:10px">${outreachEmail.body || ''}</div>
+    </div>` : outreachEmail === null && lead.contacts ? `
+    <div style="background:#f4f5f7;border:1px solid #dce8f5;border-radius:3px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:#8a9ab0">
+      ⏳ Drafting email...
+    </div>` : '';
+
+  // LinkedIn draft
+  const linkedinHtml = outreachLinkedIn ? `
+    <div style="background:#f8fafc;border:1px solid #dce8f5;border-radius:3px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:9px;color:#1a7aad;letter-spacing:0.12em;font-weight:600">💼 DRAFT LINKEDIN MESSAGE</div>
+        <button onclick="copyText(event, 'li-${lead.company.replace(/\s/g,'')}')"
+          style="font-size:9px;padding:2px 10px;background:#e8f6fd;border:1px solid #29abe2;color:#1a7aad;border-radius:2px;cursor:pointer;font-family:inherit">
+          COPY
+        </button>
+      </div>
+      <div id="li-${lead.company.replace(/\s/g,'')}"
+        style="font-size:11px;color:#1a2332;line-height:1.8;white-space:pre-wrap;background:#fff;border:1px solid #dce8f5;border-radius:2px;padding:10px">${outreachLinkedIn}</div>
+      <div style="font-size:9px;color:#8a9ab0;margin-top:5px">⚠ LinkedIn connection messages are capped at 300 characters. Trim if needed.</div>
+    </div>` : '';
+
+  return `<div class="lead-card ${scoreClass(total)}" style="animation-delay:${index*0.1}s" onclick="toggleCard(event, this)">
+    <div class="lead-top">
+      <div class="lead-score">
+        <div class="score-num" style="color:${col}">${total}</div>
+        <div class="score-lbl">SCORE</div>
+      </div>
+      <div style="min-width:0;flex:1">
+        <div class="lead-name">
+          ${lead.company || 'Unknown'}
+          ${lead.urgency ? `<span class="urgency-badge" style="background:${us.bg};border-color:${us.border};color:${us.color}">${lead.urgency}</span>` : ''}
+          <span class="urgency-badge" style="background:${solarStyle.bg};border-color:${solarStyle.border};color:${solarStyle.color}">${solarStyle.icon} ${solarStatus}</span>
+        </div>
+        <div class="lead-meta">
+          <span class="meta-item">📍 ${lead.location || '—'}</span>
+          <span class="meta-item">🏭 ${lead.sector || '—'}</span>
+          <span class="meta-item">⚡ ${lead.est_mwp || '—'}</span>
+          ${contacts.length ? `<span class="meta-item" style="color:#29abe2">👤 ${contacts.length} contact${contacts.length>1?'s':''}</span>` : ''}
+        </div>
+      </div>
+      <div style="color:#b8d4ed;font-size:18px;padding-right:4px;flex-shrink:0">›</div>
+    </div>
+    <div class="lead-detail">
+      <div class="score-bars">${barRows}</div>
+      <div class="detail-grid">${cells}</div>
+
+      ${solarDetail ? `
+      <div style="background:#f0f7ff;border:1px solid #b8d4ed;border-radius:3px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:9px;color:#1a7aad;letter-spacing:0.12em;margin-bottom:5px;font-weight:600">🛰 SOLAR DUE DILIGENCE FINDINGS</div>
+        <div style="font-size:11px;color:#1a2332;line-height:1.7">${solarDetail}</div>
+        ${ddSourcesHtml}
+      </div>` : ''}
+
+      <div class="pitch-box">
+        <div class="pitch-label">⚡ PITCH ANGLE</div>
+        <div class="pitch-text">${lead.pitch_angle || '—'}</div>
+      </div>
+
+      ${contactsHtml}
+      ${emailHtml}
+      ${linkedinHtml}
+    </div>
+  </div>`;
+}
+
+function toggleCard(event, el) {
+  // Don't collapse if clicking a button or link inside the card
+  if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A') return;
+  el.classList.toggle('expanded');
+}
+
+function copyText(event, elementId) {
+  event.stopPropagation();
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const text = el.innerText || el.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED ✓';
+    btn.style.background = '#e8f6fd';
+    btn.style.color = '#29abe2';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED ✓';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
+}
+
+async function runAgent() {
+  if (isRunning) return;
+
+  const apiKey = document.getElementById('apikey-input').value.trim();
+  if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+    setStatus('error', 'Please enter a valid Anthropic API key first.', '');
+    return;
+  }
+
+  const query = document.getElementById('query-input').value.trim();
+  if (!query) { setStatus('error', 'Please enter a search query.', ''); return; }
+
+  const weights = getWeights();
+  const total = Object.values(weights).reduce((a,b) => a+b, 0);
+  if (total !== 100) {
+    setStatus('error', 'Scoring weights must sum to 100. Please adjust.', '');
+    return;
+  }
+
+  isRunning = true;
+  document.getElementById('thinking-log').innerHTML = '';
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('results-list').innerHTML = '';
+  document.getElementById('empty-state').style.display = 'none';
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true; btn.classList.add('running');
+  document.getElementById('btn-icon').innerHTML = '<div class="spinner"></div>';
+  document.getElementById('btn-text').textContent = 'RUNNING...';
+
+  setStatus('running', 'Agent initialising — sending request to Claude API...', '');
+  addLog('BD agent started — Stage 1: Lead Discovery & Scoring', true);
+  addLog(`Query: "${query}"`);
+  addLog(`Weights: credit=${weights.credit} revenue=${weights.revenue} size=${weights.project_size} timing=${weights.timing} | cross=${weights.cross_sell} esg=${weights.esg_mandate} sus=${weights.sustainability} pe=${weights.pe_backed} net=${weights.network} first=${weights.first_deal}`);
+
+  const systemPrompt = `You are a BD intelligence agent for TW.O Capital, an Indian C&I clean energy platform. Your job is to find manufacturing and industrial facilities in India that are ideal solar customers.
+
+SEARCH STRATEGY — use ALL of the following source types to surface leads, including smaller/less vocal companies:
+1. Press: "[sector] plant commissioned India 2026", "new factory inaugurated India 2025 2026", "greenfield commissioning [state] 2026"
+2. DPIIT/FDI: "manufacturing investment India approved 2025 2026 plant", "Make in India new facility [sector]"
+3. State industrial authorities: "MIDC GIDC KIADB SIPCOT new allotment 2025 2026", "[state] industrial park new company 2026"
+4. Rating signals: "CRISIL ICRA new project rating [sector] India 2026 greenfield capex"
+5. EPC contractor wins: "L&T Tata Projects Shapoorji EPC contract new plant India 2026" — reveals projects before they appear in press
+6. Environmental clearances: "environmental clearance India manufacturing 2025 2026 new plant"
+7. Trade publications: "Chemical Weekly Pharmabiz Autocar Professional food processing new facility India 2026"
+8. PE portfolio: "GIC KKR Warburg Blackstone ChrysCapital portfolio company India manufacturing 2026 new plant"
+9. BSE/NSE filings: new plant commissioning 2026 annual report investor presentation listed company
+10. DISCOM/power: new HT connection factory India 2026 [state] industrial large consumer
+
+HARD FILTERS — ALL must be met:
+- Credit BBB+ minimum (NSE/BSE listed, MNC subsidiary, or PE-backed with named institutional backer)
+- Annual revenue ≥ ₹100 Cr (consolidated or parent)
+- Solar potential ≥ 500 kWp
+- Site operational, commissioning, or final-stage construction
+- Smaller mid-cap companies visible only in trade publications or EPC press releases are valid and welcome
+
+SCORING (score each out of its maximum):
+
+credit (max ${weights.credit}): AAA/S&P AA- above=${weights.credit} | AA equivalent large listed=${Math.round(weights.credit*0.88)} | A equivalent=${Math.round(weights.credit*0.75)} | BBB PE-backed mid-cap=${Math.round(weights.credit*0.60)} | below BBB=0
+
+revenue (max ${weights.revenue}): >₹5000Cr=${weights.revenue} | ₹1000-5000Cr=${Math.round(weights.revenue*0.83)} | ₹500-1000Cr=${Math.round(weights.revenue*0.67)} | ₹100-500Cr=${Math.round(weights.revenue*0.50)} | <₹100Cr=0
+
+project_size (max ${weights.project_size}): >10MWp=${weights.project_size} | 5-10MWp=${Math.round(weights.project_size*0.81)} | 2-5MWp=${Math.round(weights.project_size*0.63)} | 500kWp-2MWp=${Math.round(weights.project_size*0.44)} | <500kWp=0
+
+timing (max ${weights.timing}): Already operational/drawing grid=${weights.timing} | commissioning by Sep/Oct 2026=${Math.round(weights.timing*0.88)} | Nov-Dec 2026=${Math.round(weights.timing*0.67)} | 2027=${Math.round(weights.timing*0.33)} | beyond 2027=0
+
+cross_sell (max ${weights.cross_sell}): Process industry chillers+wastewater+HVAC=${weights.cross_sell} | manufacturing with HVAC+BESS=${Math.round(weights.cross_sell*0.67)} | logistics limited cross-sell=${Math.round(weights.cross_sell*0.33)}
+
+esg_mandate (max ${weights.esg_mandate}): Published SBT/RE100/net-zero with India mandate=${weights.esg_mandate} | partial BRSR only=${Math.round(weights.esg_mandate*0.50)} | none=0
+
+sustainability (max ${weights.sustainability}): Named sustainability/energy lead publicly identified=${weights.sustainability} | ESG team exists unnamed=${Math.round(weights.sustainability*0.50)} | none=0
+
+pe_backed (max ${weights.pe_backed}): GIC or KKR=${weights.pe_backed} | other major PE Blackstone/Warburg/ChrysCapital/CPPIB/Temasek/Actis=${Math.round(weights.pe_backed*0.75)} | listed/no PE=0
+
+network (max ${weights.network}): C-suite connected to Manya Ranjan/Archit Mehrotra/Karan Bhutani/Shashidhar Reddy on LinkedIn=${weights.network} | not found=0
+
+first_deal (max ${weights.first_deal}): No prior energy transition deal in press/BRSR=${weights.first_deal} | some deals but scope for more=${Math.round(weights.first_deal*0.50)} | active RE buyer=0
+
+total_score = sum of all ten scores.
+
+Return ONLY a raw JSON array — no markdown, no backticks, no prose. Top 5-7 leads by total_score descending:
+{
+  "company": string, "sector": string, "location": string, "site_status": string,
+  "est_mwp": string, "credit": string, "revenue_est": string,
+  "urgency": "CLOSE NOW"|"INITIATE NOW"|"VERIFY THEN PITCH",
+  "scores": {"credit":N,"revenue":N,"project_size":N,"timing":N,"cross_sell":N,"esg_mandate":N,"sustainability":N,"pe_backed":N,"network":N,"first_deal":N},
+  "total_score": N, "pitch_angle": string, "contact_hint": string, "source_url": string, "solar_status": "UNVERIFIED"
+}
+Never fabricate. Actively seek smaller, less press-visible companies via EPC wins, state authority announcements, trade publications.`;
+
+  try {
+    addLog('Stage 1: Calling Claude API with web search — discovering & scoring leads...', true);
+    setStatus('running', 'Stage 1 — searching the web for qualifying leads...');
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4000,
+        system: systemPrompt,
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }],
+        messages: [{
+          role: 'user',
+          content: `Find and score qualifying solar customer leads for: "${query}"\n\nUse web search to find current verified information. Return only the JSON array.`
+        }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const searches = (data.content||[]).filter(b => b.type === 'tool_use').length;
+    addLog(`Stage 1 response received. Content blocks: ${data.content?.length || 0}`);
+    if (searches > 0) addLog(`Web searches executed in Stage 1: ${searches}`, true);
+    setStatus('running', 'Stage 1 — parsing and scoring results...', '');
+
+    let rawText = (data.content||[]).filter(b => b.type==='text').map(b => b.text).join('');
+    addLog('Extracting and scoring lead list...');
+
+    let leads = [];
+    const cleaned = rawText.replace(/```json|```/g,'').trim();
+    const match = cleaned.match(/\[[\s\S]*\]/);
+    if (match) leads = JSON.parse(match[0]);
+    else leads = JSON.parse(cleaned);
+
+    leads.sort((a,b) => (b.total_score||0)-(a.total_score||0));
+    addLog(`${leads.length} qualifying leads scored and ranked ✓`, true);
+
+    // ── STAGE 2: SOLAR DUE DILIGENCE ─────────────────────────────────
+    setStatus('running', `Stage 2 — running solar due diligence on ${leads.length} leads...`, '');
+    addLog('─────────────────────────────────────', false);
+    addLog('STAGE 2: Solar & Open Access Due Diligence', true);
+    addLog('Checking satellite imagery, BRSR filings, LinkedIn, vendor press releases...');
+
+    // Show partial results immediately while DD runs
+    document.getElementById('results-section').style.display = 'block';
+    document.getElementById('results-meta').textContent = `${leads.length} LEADS · DUE DILIGENCE RUNNING...`;
+    document.getElementById('results-list').innerHTML = leads.map((l,i) => renderLead(l,i)).join('');
+
+    const ddSystemPrompt = `You are a solar due diligence analyst for TW.O Capital. For a given company and location, you must determine whether they already have rooftop solar, open access solar, or group captive solar arrangements in place.
+
+Search the following sources in this order:
+1. Google Maps / satellite: Search "[company] [location] site:maps.google.com" or "[company name] [city] satellite rooftop solar panels" to check for visible solar installations
+2. BRSR/Annual Report: Search "[company] BRSR annual report renewable energy solar installed capacity MW" to find disclosed RE assets
+3. Vendor press releases: Search "[company] solar rooftop installed [Amplus OR CleanMax OR FourthPartner OR AmpEnergy OR Avaada OR Sunsure OR Gentari]" to find signed deals
+4. LinkedIn: Search "[company] solar renewable energy commissioned installed" site:linkedin.com to find stakeholder posts about solar
+5. Open access: Search "[company] open access group captive solar wind power purchase MW" for disclosed OA arrangements
+6. News: Search "[company name] [city] solar plant commissioned renewable energy [current year]"
+
+Based on your findings, determine:
+- solar_status: exactly one of "CLEAN SLATE" (no solar found) | "HAS SOLAR" (confirmed solar exists) | "PARTIAL SOLAR" (some solar, significant capacity remaining) | "UNVERIFIED" (could not determine)
+- solar_detail: 2-3 sentences summarising what you found across all sources checked. Be specific — mention which source confirmed or denied solar. If clean slate, say so clearly.
+- dd_sources: array of source types actually checked, e.g. ["Google Maps Satellite", "BRSR 2024", "LinkedIn Posts", "Vendor Press Releases", "News Search"]
+
+Return ONLY a JSON object — no markdown, no backticks:
+{
+  "solar_status": "CLEAN SLATE" | "HAS SOLAR" | "PARTIAL SOLAR" | "UNVERIFIED",
+  "solar_detail": string,
+  "dd_sources": string[]
+}`;
+
+    // Run DD for each lead sequentially, updating UI as each completes
+    for (let i = 0; i < leads.length; i++) {
+      const lead = leads[i];
+      addLog(`Checking [${i+1}/${leads.length}] ${lead.company}, ${lead.location}...`);
+
+      try {
+        const ddRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 1000,
+            system: ddSystemPrompt,
+            tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }],
+            messages: [{
+              role: 'user',
+              content: `Run solar due diligence for: ${lead.company}, located at ${lead.location}. Sector: ${lead.sector}. Check all sources listed and determine solar status. Return JSON only.`
+            }]
+          })
+        });
+
+        if (ddRes.ok) {
+          const ddData = await ddRes.json();
+          const ddSearches = (ddData.content||[]).filter(b => b.type === 'tool_use').length;
+          const ddText = (ddData.content||[]).filter(b => b.type==='text').map(b => b.text).join('');
+          const ddCleaned = ddText.replace(/```json|```/g,'').trim();
+          const ddMatch = ddCleaned.match(/\{[\s\S]*\}/);
+
+          if (ddMatch) {
+            const ddResult = JSON.parse(ddMatch[0]);
+            leads[i].solar_status = ddResult.solar_status || 'UNVERIFIED';
+            leads[i].solar_detail = ddResult.solar_detail || '';
+            leads[i].dd_sources = ddResult.dd_sources || [];
+            addLog(`  → ${lead.company}: ${leads[i].solar_status} (${ddSearches} sources checked)`, leads[i].solar_status === 'CLEAN SLATE');
+          }
+        }
+      } catch(ddErr) {
+        addLog(`  → ${lead.company}: DD skipped (${ddErr.message})`);
+        leads[i].solar_status = 'UNVERIFIED';
+      }
+
+      // Re-render results with updated DD data as each lead completes
+      document.getElementById('results-list').innerHTML = leads.map((l,j) => renderLead(l,j)).join('');
+    }
+
+    // ── STAGE 3: STAKEHOLDER IDENTIFICATION & OUTREACH DRAFTING ──────
+    setStatus('running', `Stage 3 — identifying stakeholders and drafting outreach for ${leads.length} leads...`, '');
+    addLog('─────────────────────────────────────', false);
+    addLog('STAGE 3: Stakeholder Identification & Outreach Drafting', true);
+    addLog('Searching LinkedIn, company pages, press releases for named contacts...');
+
+    const s3SystemPrompt = `You are a BD outreach specialist for TW.O Capital, India's C&I clean energy financing and solutioning platform. TW.O helps manufacturing and industrial companies decarbonise through rooftop solar, BESS, chillers, wastewater treatment and energy efficiency — all on OPEX/PPA contracts with zero upfront capex.
+
+For a given company, you must:
+1. Search LinkedIn and web to find 1-2 named people who are the right contacts for a clean energy pitch. Priority order: Head of Sustainability / ESG > Head of Facilities / Engineering > CFO > MD/CEO. Search "[company] sustainability head LinkedIn", "[company] facilities head energy India", "[company] ESG director LinkedIn", "[company] MD CEO India"
+2. Draft a short, confident LinkedIn connection message (under 300 characters — LinkedIn limit) from Yash Narain, Strategy & Partnerships, TW.O Capital
+3. Draft a cold email from Yash Narain
+
+OUTREACH STYLE RULES:
+- Lead with THEIR problem / context (their plant, their ESG target, their commissioning date) — NOT with TW.O credentials
+- One specific hook per message that proves you've done research (e.g. reference their published net-zero target, their specific plant location, their recent commissioning)
+- OPEX / zero capex framing always — "no capex for [company]"
+- Email subject line must be specific, not generic
+- Email body: 4 short paragraphs max. No bullet points. No "Hope you're doing well."
+- LinkedIn message: conversational, specific, no corporate jargon, end with a question
+- Sign off: Yash Narain, Strategy & Partnerships, TW.O Capital, +91 9958430584, yash.narain@twopointo.capital
+
+Return ONLY a JSON object — no markdown, no backticks:
+{
+  "contacts": [
+    {
+      "name": string (full name or "Search: [title] at [company]" if not found),
+      "role": string,
+      "linkedin_url": string or "",
+      "email_hint": string or "",
+      "confidence": "CONFIRMED" | "INFERRED" | "SEARCH REQUIRED"
+    }
+  ],
+  "email": {
+    "subject": string,
+    "to": string,
+    "body": string
+  },
+  "linkedin_message": string
+}`;
+
+    for (let i = 0; i < leads.length; i++) {
+      const lead = leads[i];
+      addLog(`Finding contacts [${i+1}/${leads.length}] ${lead.company}...`);
+
+      try {
+        const s3Res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 1500,
+            system: s3SystemPrompt,
+            tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
+            messages: [{
+              role: 'user',
+              content: `Find stakeholders and draft outreach for: ${lead.company}, ${lead.location}. Sector: ${lead.sector}. Site status: ${lead.site_status}. Solar status: ${lead.solar_status || 'Unknown'}. Pitch angle context: ${lead.pitch_angle}. Return JSON only.`
+            }]
+          })
+        });
+
+        if (s3Res.ok) {
+          const s3Data = await s3Res.json();
+          const s3Text = (s3Data.content||[]).filter(b => b.type==='text').map(b => b.text).join('');
+          const s3Cleaned = s3Text.replace(/```json|```/g,'').trim();
+          const s3Match = s3Cleaned.match(/\{[\s\S]*\}/);
+
+          if (s3Match) {
+            const s3Result = JSON.parse(s3Match[0]);
+            leads[i].contacts = s3Result.contacts || [];
+            leads[i].outreach_email = s3Result.email || null;
+            leads[i].outreach_linkedin = s3Result.linkedin_message || '';
+            const names = leads[i].contacts.map(c => c.name).join(', ');
+            addLog(`  → ${lead.company}: ${leads[i].contacts.length} contact(s) found — ${names}`, true);
+          }
+        }
+      } catch(s3Err) {
+        addLog(`  → ${lead.company}: Stage 3 skipped (${s3Err.message})`);
+      }
+
+      document.getElementById('results-list').innerHTML = leads.map((l,j) => renderLead(l,j)).join('');
+    }
+
+    // ── FINAL ─────────────────────────────────────────────────────────
+    const cleanLeads = leads.filter(l => l.solar_status === 'CLEAN SLATE').length;
+    const hasSolar   = leads.filter(l => l.solar_status === 'HAS SOLAR').length;
+    const withContacts = leads.filter(l => l.contacts && l.contacts.length > 0).length;
+    addLog('─────────────────────────────────────', false);
+    addLog(`All stages complete ✓ — ${cleanLeads} clean slates · ${withContacts} leads with named contacts`, true);
+    setStatus('done',
+      `Complete — ${leads.length} leads · ${cleanLeads} clean slates · ${withContacts} with contacts & outreach drafted`,
+      `${leads.length} LEADS`
+    );
+    document.getElementById('results-meta').textContent =
+      `${leads.length} LEADS · ${cleanLeads} CLEAN SLATES · ${withContacts} OUTREACH READY · ${new Date().toLocaleTimeString()}`;
+
+  } catch(err) {
+    console.error(err);
+    addLog(`Error: ${err.message}`);
+    setStatus('error', `Error: ${err.message} — check your API key and try again.`, '');
+    document.getElementById('empty-state').style.display = 'block';
+    document.getElementById('empty-state').textContent = `⚠ ${err.message}`;
+  }
+
+  isRunning = false;
+  btn.disabled = false; btn.classList.remove('running');
+  document.getElementById('btn-icon').textContent = '▶';
+  document.getElementById('btn-text').textContent = 'RUN AGENT';
+}
+</script>
+</body>
+</html>
